@@ -5,7 +5,7 @@ import pytesseract
 
 Width = 640*0.5
 Height = 480*0.5
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(3, Width)
 cap.set(4, Height)
 cap.set(10,150)
@@ -15,7 +15,7 @@ class Function():
     def __init__(self) -> None:
         #  自定义画笔颜色
         self.pen_color = [[51,153,255],[255,0,255],[0,255,0]]
-        self.template = cv2.imread("E:\\Fly_nobody\\Node\\template\\2.jpg")
+        self.template = cv2.imread("E:\\Fly_nobody\\Node\\template\\3.jpg")
         Methods = [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED, cv2.TM_CCORR, cv2.TM_CCORR_NORMED, cv2.TM_CCOEFF, cv2.TM_CCOEFF_NORMED]
         self.method = Methods[5]
         self.location = [0, 0]
@@ -26,6 +26,7 @@ class Function():
         """
     def find_color(self,image):
         #  定义高低阈值范围
+        center = 0
         low = np.array([17,123,199])
         high = np.array([179,255,255])
         kernel = np.ones((5,5),np.uint8)
@@ -42,13 +43,21 @@ class Function():
             rect = cv2.minAreaRect(are_max)
             box = cv2.boxPoints(rect)
             cv2.drawContours(image, [np.int0(box)], -1, (0, 255, 255), 2)
+            left_point_x = np.min(box[:, 0])
+            right_point_x = np.max(box[:, 0])
+            center = (left_point_x+right_point_x)/2
         except:
             pass
         cv2.imshow('camera', image)
         cv2.waitKey(1)
+        if center != 0:
+            print(center)
+            return center
+
 
     def Template(self,img):
         # 对摄像头图像进行处理
+        x,y,w,h = 0,0,0,0
         Img = img.copy()
         gray = cv2.cvtColor(Img,cv2.COLOR_RGB2GRAY)
         thresh = cv2.threshold(gray,150,255,cv2.THRESH_BINARY_INV)[1]
@@ -67,6 +76,7 @@ class Function():
         thresh_color = cv2.cvtColor(tem, cv2.COLOR_GRAY2RGB)
         cv2.drawContours(thresh_color, cnts, -1, (0, 255, 0), 1)
 
+
         min_pos = -1
         min_value = 2
         # 将边缘一个一个进行轮廓匹配  找出value最小值（最佳值）
@@ -84,7 +94,9 @@ class Function():
         cv2.imshow("img2",img)
         cv2.waitKey(1)
 
+
     def recognice_text(self,img):
+        center = 0
         pytesseract.pytesseract.tesseract_cmd = "C:\Program Files\Tesseract-OCR\\tesseract.exe"
         H,W = img.shape[:2]
         boxes = pytesseract.image_to_boxes(img)
@@ -93,8 +105,39 @@ class Function():
                 b = box.split(' ')
                 x, y, w, h = int(b[1]), int(b[2]), int(b[3]), int(b[4])
                 cv2.rectangle(img, (x, H-y), (w, H-h), (0, 0, 255), 2)
+                center = (x+w)/2
+                break
         cv2.imshow("img",img)
         cv2.waitKey(1)
+        if center != 0:
+            print(center)
+            return center
+        
+
+    def find_target(self,img):
+        center = 0
+        Img = img.copy()
+        gray = cv2.cvtColor(Img,cv2.COLOR_RGB2GRAY)
+        kernel = np.ones((10, 10))
+        erode = cv2.erode(gray, kernel, iterations=2)
+        thresh_1 = cv2.threshold(erode,200,255,cv2.THRESH_BINARY)[1] 
+        dia = cv2.dilate(thresh_1, kernel, iterations=1)
+        can = cv2.Canny(dia,50,150)
+        circles = cv2.HoughCircles(can,cv2.HOUGH_GRADIENT,1,100,param1=100,param2=30,minRadius=20,maxRadius=80)
+        try:
+            circles = np.uint16(np.around(circles.astype('float')))
+            for i in circles[0,:]:
+                cv2.circle(img,(i[0],i[1]),i[2],(0,0,255),2)
+                cv2.circle(img,(i[0],i[1]),2,(255,0,0),3)
+                center = i[0]
+        except:
+            pass
+        cv2.imshow("img",img)
+        cv2.imshow("Img",can)
+        if center != 0:
+            print(center)
+            return center
+
 
 
 if __name__ == "__main__":
@@ -107,9 +150,10 @@ if __name__ == "__main__":
             fun.find_color(imgHSV)
         elif model == 2:
             fun.Template(frame)
-        else:
+        elif model == 3:
             fun.recognice_text(frame)
-
+        else:
+            fun.find_target(frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
