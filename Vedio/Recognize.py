@@ -1,7 +1,9 @@
 from itertools import count
+from tkinter.messagebox import NO
 import cv2
 import numpy as np
 import pytesseract
+import math
 
 Width = 640*0.5
 Height = 480*0.5
@@ -54,7 +56,6 @@ class Function():
             print(center)
             return center
 
-
     def Template(self,img):
         # 对摄像头图像进行处理
         x,y,w,h = 0,0,0,0
@@ -94,7 +95,6 @@ class Function():
         cv2.imshow("img2",img)
         cv2.waitKey(1)
 
-
     def recognice_text(self,img):
         center = 0
         pytesseract.pytesseract.tesseract_cmd = "C:\Program Files\Tesseract-OCR\\tesseract.exe"
@@ -113,14 +113,13 @@ class Function():
             print(center)
             return center
         
-
     def find_target(self,img):
         center = 0
         Img = img.copy()
         gray = cv2.cvtColor(Img,cv2.COLOR_RGB2GRAY)
         kernel = np.ones((10, 10))
         erode = cv2.erode(gray, kernel, iterations=2)
-        thresh_1 = cv2.threshold(erode,200,255,cv2.THRESH_BINARY)[1] 
+        thresh_1 = cv2.threshold(erode,120,255,cv2.THRESH_BINARY)[1] 
         dia = cv2.dilate(thresh_1, kernel, iterations=1)
         can = cv2.Canny(dia,50,150)
         circles = cv2.HoughCircles(can,cv2.HOUGH_GRADIENT,1,100,param1=100,param2=30,minRadius=20,maxRadius=80)
@@ -138,6 +137,102 @@ class Function():
             print(center)
             return center
 
+    def recogniced_line(self,img):
+        Img = img.copy()
+        rows = Img.shape[0]
+        cols = Img.shape[1]
+        part1 = Img[rows//3:rows,0:cols*2//5]
+        part2 = Img[rows//3:rows,cols*2//6:cols*4//6]
+        part3 = Img[rows//3:rows,cols*3//5:cols]
+
+        blurred1 = cv2.GaussianBlur(part1, (7, 7), 0)
+        edge1s = cv2.Canny(blurred1,170,255)
+        line1s = cv2.HoughLines(edge1s,1,np.pi/180,140)
+
+        blurred2 = cv2.GaussianBlur(part2, (7, 7), 0)
+        edge2s = cv2.Canny(blurred2,170,255)
+        line2s = cv2.HoughLines(edge2s,1,np.pi/180,140)
+
+        blurred3 = cv2.GaussianBlur(part3, (7, 7), 0)
+        edge3s = cv2.Canny(blurred3,170,255)
+        line3s = cv2.HoughLines(edge3s,1,np.pi/180,140)
+
+        the1 = 0
+        the2 = 0
+        the3 = 0
+
+        try:
+            for line in line1s:
+                rho1,theta1 = line[0]
+                a = np.cos(theta1)
+                b = np.sin(theta1)
+                x0 = a*rho1
+                y0 = b*rho1
+                x1 = int(x0 + 1000*(-b))
+                y1 = int(y0 + 1000*(a))
+                x2 = int(x0 - 1000*(-b))
+                y2 = int(y0 - 1000*(a))
+                cv2.line(part1,(x1,y1),(x2,y2),(0,0,255),2)
+                the1 = math.degrees(theta1)
+
+        except:
+            pass
+
+        try:
+            for line in line2s:
+                rho2,theta2 = line[0]
+                a = np.cos(theta2)
+                b = np.sin(theta2)
+                x0 = a*rho2
+                y0 = b*rho2
+                x1 = int(x0 + 1000*(-b))
+                y1 = int(y0 + 1000*(a))
+                x2 = int(x0 - 1000*(-b))
+                y2 = int(y0 - 1000*(a))
+                cv2.line(part2,(x1,y1),(x2,y2),(0,255,0),2)
+                the2 = math.degrees(theta2)
+
+        except:
+            pass
+            
+        try:
+            for line in line3s:
+                rho3,theta3 = line[0]
+                a = np.cos(theta3)
+                b = np.sin(theta3)
+                x0 = a*rho3
+                y0 = b*rho3
+                x1 = int(x0 + 1000*(-b))
+                y1 = int(y0 + 1000*(a))
+                x2 = int(x0 - 1000*(-b))
+                y2 = int(y0 - 1000*(a))
+                cv2.line(part3,(x1,y1),(x2,y2),(0,255,0),2)
+                the3 = math.degrees(theta3)
+
+        except:
+            pass
+        if the2 ==0:
+            if the1!=0:
+                print("右偏了，向左靠")
+            elif the3!=0:
+                print("左偏了，向右靠")
+        elif the1 != 0 and the2 !=0:
+            if 90<the1<130:
+                print("右转90")
+            elif 150<the1<180:
+                print("右微调")
+            else:
+                print("左靠")
+        elif the2 != 0 and the3 != 0:
+            if 90<the3<130:
+                print("左转90")
+            elif 0<the3<35:
+                print("左微调")
+            else:
+                print("右靠")
+        cv2.imshow("img1",part1)
+        cv2.imshow("img2",part2)
+        cv2.imshow("img3",part3)
 
 
 if __name__ == "__main__":
@@ -145,15 +240,17 @@ if __name__ == "__main__":
     while True:
         id,frame = cap.read()
         if model == 1:
-            image = cv2.GaussianBlur(frame, (5, 5), 0)  
+            image = cv2.GaussianBlur(frame, (7, 7), 0)  
             imgHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             fun.find_color(imgHSV)
         elif model == 2:
             fun.Template(frame)
         elif model == 3:
             fun.recognice_text(frame)
-        else:
+        elif model == 4:
             fun.find_target(frame)
+        else:
+            fun.recogniced_line(frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
