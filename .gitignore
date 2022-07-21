@@ -1,0 +1,8 @@
+.vscode
+
+#单片机
+*.o
+*.d
+*.a
+
+#Rockpi
