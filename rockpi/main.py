@@ -1,18 +1,12 @@
 import multiprocessing
-from communicate import
-from rockpi.communicate import Receive 
-
+from SerialTask import main_serial
+from DetectionTask import main_detection
 
 def camera_f(pipeline):
-    pass
+    main_detection(pipeline)
 
 def serial_f(pipeline):
-    receive = Receive('/dev/ttyUSB0')
-    pipe = pipeline
-
-    
-
-    
+    main_serial(pipeline)
 
 
 if __name__ == '__main__':

@@ -1,9 +1,13 @@
 .vscode
 test.ipynb
 
+temp/
+!*/temp
+
 #单片机
 *.o
 *.d
 *.a
 
 #Rockpi
+__pycache__/
