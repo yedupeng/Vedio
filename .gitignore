@@ -1,4 +1,5 @@
 .vscode
+test.ipynb
 
 #单片机
 *.o
