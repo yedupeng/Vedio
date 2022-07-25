@@ -1,27 +1,22 @@
-from audioop import reverse
-from calendar import day_abbr
-from shelve import Shelf
 from loguru import logger
 import serial
 
-# 定义串口3
-Uart2 = serial.Serial(  port="/dev/ttyAMA1",
-                        bytesize=8,
-                        baudrate=115200,
-                        stopbits=1,
-                        timeout=1000)
 
 # 接收类
 class Receive():
-    def __init__(self) -> None:
+    def __init__(self, device) -> None:
+        self.uart = serial.Serial(  port=device,
+                                    bytesize=8,
+                                    baudrate=115200,
+                                    stopbits=1,
+                                    timeout=0)
         self.model = 0
         self.uart_buf = []
         self.state = 0
 
-
     def uart_read(self):
-        if(Uart2.in_waiting>0):
-            data = Uart2.read().hex()
+        if(self.uart.in_waiting>0):
+            data = self.uart.read().hex()
             model = self.data_processing(data)
             return model
 
@@ -83,7 +78,7 @@ class Receive():
     # 发送串口数据
     def uart_send(self, data1, data2, data3, k, index):
         if index == 17:
-            Uart2.write(self.pack_data_17(data1,data2,data3))
+            self.uart.write(self.pack_data_17(data1,data2,data3))
 
     # 测试：定义功能包17
     def pack_data_17(self, data1, data2, data3):
@@ -99,11 +94,14 @@ class Receive():
             data_sum = temp+data_sum
         return data_sum%256
 
-
-if __name__ == "__main__":
+def test():
     receive = Receive()
     while(1):
         model = receive.uart_read()
         while(model == "17"):
             logger.info("success to model 17")
             receive.uart_send(8,2,3,0,17)
+
+
+if __name__ == "__main__":
+    test()
