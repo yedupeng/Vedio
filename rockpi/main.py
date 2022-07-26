@@ -1,23 +1,39 @@
-import multiprocessing
-from SerialTask import main_serial
-from DetectionTask import main_detection
+from communite_module.Communications import SelfSerial
+from detection_module.Detections import Detections
 
-
-def camera_f(pipeline):
-    main_detection('/dev/ttyUSB0', pipeline)
-
-def serial_f(pipeline):
-    main_serial('/dev/ttyUSB0', pipeline)
+from loguru import logger
+import cv2
 
 
 if __name__ == '__main__':
-    pipe_camera, pipe_serial = multiprocessing.Pipe()
+    self_serial = SelfSerial('/dev/ttyUSB0')
+    detections = Detections()
 
-    camera_p = multiprocessing.Process(target=camera_f, args=(pipe_camera, ))
-    serial_p = multiprocessing.Process(target=serial_f, args=(pipe_serial, ))
+    cap = cv2.VideoCapture(2)
+    size = (640*0.5, 480*0.5)
+    cap.set(3, size[0])
+    cap.set(4, size[1])
+    cap.set(10,150)
 
-    camera_p.start()
-    serial_p.start()
+    mode = 0
 
-    camera_p.join()
-    serial_p.join()
+    while True:
+        ret,frame = cap.read()
+        if ret:
+            mode = self_serial.uart_read_mode(mode)
+
+            if mode == "17":
+                msg = detections.find_color(frame)
+                if msg:
+                    self_serial.uart_send_msg((17, ) + (msg))
+
+            if mode == "18":
+                detections.recognice_text(frame)
+
+            if mode == "19":
+                detections.find_target(frame)
+
+            if mode == "20":
+                detections.recogniced_line(frame)
+    cap.release()
+    cv2.destroyAllWindows()

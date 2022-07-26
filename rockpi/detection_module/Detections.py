@@ -17,6 +17,9 @@ class Detections():
 
     # 模式17  数据包类型17  数据三位  长度0x03
     def find_color(self,image):
+        image = cv2.GaussianBlur(image, (7, 7), 0)  
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
         #  定义高低阈值范围
         low = np.array([0,98,182])
         high = np.array([61,255,255])
@@ -44,8 +47,8 @@ class Detections():
             self.flag_color = 0
             center_x = 0
             center_y = 0
-        cv2.imshow('camera', image)
-        cv2.waitKey(1)
+        # cv2.imshow('camera', image)
+        # cv2.waitKey(1)
         if center_x != 0:
             logger.info('Find Coler:Point:({}, {})'.format(center_x, center_y))
         return (self.flag_color, center_x, center_y)

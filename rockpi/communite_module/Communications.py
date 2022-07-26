@@ -4,9 +4,8 @@ import serial
 
 # 接收类
 class SelfSerial():
-    def __init__(self, device, pipeline):
+    def __init__(self, device):
         self.uart = serial.Serial(port=device, bytesize=8, baudrate=115200, stopbits=1, timeout=0)
-        self.pipe = pipeline
         self.msg_mode = 0
         self.uart_buf = []
         self.state = 0
@@ -24,19 +23,11 @@ class SelfSerial():
                 return lastmode
         else:
             return lastmode
-    
-    #多进程 检测进程接口 往管道发送数据
-    def pipe_send_msg(self, *msg):
-        self.pipe.send(msg[0])
-    
-    #多进程 串口线程接口 获取管道数据
-    def pipe_read_msg(self) -> tuple:
-        msg = self.pipe.recv()
-        return msg
 
     #多进程 串口线程接口 往串口发送数据
-    def uart_send_msg(self, msg):
-        logger.debug(msg)
+    def uart_send_msg(self, *msg):
+        msg = msg[0]
+        logger.debug([msg])
         #17:色块 18:字符 19:圆 20:巡线
         mode = msg[0]
         if mode == 17: 
