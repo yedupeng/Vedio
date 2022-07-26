@@ -36,6 +36,7 @@ class SelfSerial():
 
     #多进程 串口线程接口 往串口发送数据
     def uart_send_msg(self, msg):
+        #17:色块 18:字符 19:圆 20:巡线
         mode = msg[0]
         if mode == 17: 
             # 

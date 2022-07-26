@@ -1,9 +1,12 @@
-from asyncio.windows_utils import pipe
+from re import S
 from loguru import logger
 import serial
 import numpy as np
 import cv2
 import math
+
+from communite_module.Communications import SelfSerial
+from loguru import logger
 
 # 接收类
 class Communite():
@@ -22,97 +25,6 @@ class Communite():
         Methods = [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED, cv2.TM_CCORR, cv2.TM_CCORR_NORMED, cv2.TM_CCOEFF, cv2.TM_CCOEFF_NORMED]
         self.method = Methods[5]
         self.location = [0, 0]
-
-    def pipeline_send(self, msg):
-        self.pipe.send(msg)
-
-    def uart_read(self, last_mode):
-        if(self.Uart2.in_waiting>0):
-            data = self.Uart2.read().hex()
-            model = self.data_processing(data)
-            return model
-        else:
-            return last_mode
-
-    # 数据处理
-    def data_processing(self, data) -> int:
-        print(data)
-        if(self.state == 0):
-            if(data == "0f"):
-                self.state = 1
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 1):
-            if(data == "f0"):
-                self.state = 2
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 2):
-            if(data == "20"):
-                self.state = 3
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 3):
-            if(data == "02"):
-                self.state = 4
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 4):
-            self.state = 5
-            self.uart_buf.append(data)
-
-        elif(self.state == 5):
-            sum = 0
-            for i in range(5):
-                sum = sum + int(self.uart_buf[i],16)
-            sum = sum % 256
-            # print(sum)
-            # print(int(data,16))
-            data_16 = int(data, 16)
-            if(data_16 == sum):
-                # self.uart_buf.append(data)
-                self.model = self.uart_buf[4]
-                self.uart_buf = []
-                self.state = 0
-                # logger.info("Connect success!")
-                return self.model
-                
-            else:
-                self.state = 0
-
-    """ 
-    发送串口数据
-    17:色块
-    18:字符
-    19:圆
-    20:巡线
-    """
-    def uart_send(self, data1, data2, data3, k, index):
-        if index == 17: 
-            self.pipeline_send(self.pack_data_17(data1,data2,data3))
-        elif index == 18:
-            self.pipeline_send(self.pack_data_18(data1,data2,data3))
-        elif index == 19:
-            self.pipeline_send(self.pack_data_19(data1,data2,data3))
-        elif index == 20:
-            self.pipeline_send(self.pack_data_20(data1,data2,data3))
-
-
-
-    # 求和取余得发送包尾
-    def sum_check(self, data_list):
-        data_sum = 0
-        for temp in data_list:
-            data_sum = temp+data_sum
-        return data_sum%256
 
     # 模式17  数据包类型17  数据三位  长度0x03
     def find_color(self,image):
@@ -385,6 +297,7 @@ class Communite():
         self.uart_send(flag_line,bias,the2,0,20)
 
 def main_detection(pipeline):
+    self_serial = SelfSerial('/dev/ttyUSB0', pipeline)
     Width = 640*0.5
     Height = 480*0.5
     cap = cv2.VideoCapture(3)
