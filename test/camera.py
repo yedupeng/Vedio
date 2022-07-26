@@ -7,6 +7,8 @@ for i in range(4):
         ret, frame = cap.read()
         if ret:
             logger.debug('camera:{} is OK! shape is {}'.format(i, frame.shape))
+            cv2.imshow(str(i), frame)
+            cv2.waitKey(2000)
             cap.release()
             break
         logger.warning('cant open camera:{} !'.format(i))
