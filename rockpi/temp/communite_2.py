@@ -6,7 +6,7 @@ import math
 
 Width = 640*0.5
 Height = 480*0.5
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(3)
 cap.set(3, Width)
 cap.set(4, Height)
 cap.set(10,150)
@@ -15,6 +15,7 @@ flag_color = 0
 flag_A = 0
 flag_circle = 0
 flag_line = 0
+last_model = 0
 
 # 定义串口3
 Uart2 = serial.Serial(  port="/dev/ttyUSB0",
@@ -289,7 +290,7 @@ class Communite():
 
         blurred1 = cv2.GaussianBlur(part1, (7, 7), 0)
         edge1s = cv2.Canny(blurred1,170,255)
-        line1s = cv2.HoughLines(edge1s,1,np.pi/180,140)
+        line1s = cv2.HoughLines(edge1s,1,np.pi/180,100)
 
         blurred2 = cv2.GaussianBlur(part2, (7, 7), 0)
         edge2s = cv2.Canny(blurred2,170,255)
@@ -297,7 +298,7 @@ class Communite():
 
         blurred3 = cv2.GaussianBlur(part3, (7, 7), 0)
         edge3s = cv2.Canny(blurred3,170,255)
-        line3s = cv2.HoughLines(edge3s,1,np.pi/180,140)
+        line3s = cv2.HoughLines(edge3s,1,np.pi/180,100)
 
         the1 = 0
         the2 = 0
@@ -385,9 +386,11 @@ class Communite():
         """
         if the2 ==0:
             if the1!=0:
-                bias = 4
-            elif the3!=0:
                 bias = 3
+                logger.info("左靠")
+            elif the3!=0:
+                bias = 4
+                logger.info("右靠")
             else:
                 if theta>-70 and theta<-10:
                     bias = 6
@@ -395,15 +398,18 @@ class Communite():
                     bias = 7
                 else:
                     bias = 0
+                    #logger.info("继续走")
         elif the1 != 0 and the2 !=0:
-            if 90<the1<130:
+            if 70<the1<110:
+                logger.info("左转90")
                 bias = 1
             elif 150<the1<180:
                 bias = 5
             else:
                 bias = 3
         elif the2 != 0 and the3 != 0:
-            if 90<the3<130:
+            if 70<the3<110:
+                logger.info("右转90")
                 bias = 2
             elif 0<the3<35:
                 bias = 5
@@ -419,20 +425,25 @@ if __name__ == "__main__":
     com = Communite()
     while(1):
         id,frame = cap.read()
+        last_model = model
         model = com.uart_read(model)
         if model == "17":
             image = cv2.GaussianBlur(frame, (7, 7), 0)  
             imgHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             com.find_color(imgHSV)
-            logger.info("success to model 17")
+            if last_model != model:
+               logger.info("success to model 17")
         if model == "18":
-            logger.info("success to model 18")
+            if last_model != model:
+                logger.info("success to model 18")
             com.recognice_text(frame)
         if model == "19":
-            logger.info("success to model 19")
+            if last_model != model:
+                logger.info("success to model 19")
             com.find_target(frame)
         if model == "20":
-            logger.info("success to model 20")
+            if last_model != model:
+                logger.info("success to model 20")
             com.recogniced_line(frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
