@@ -47,8 +47,8 @@ class Detections():
             self.flag_color = 0
             center_x = 0
             center_y = 0
-        # cv2.imshow('camera', image)
-        # cv2.waitKey(1)
+        cv2.imshow('camera', image)
+        cv2.waitKey(1)
         if center_x != 0:
             logger.info('Find Coler:Point:({}, {})'.format(center_x, center_y))
         return (self.flag_color, center_x, center_y)
