@@ -7,4 +7,4 @@ def main_serial(device, pipeline):
     while True:
         msg = self_serial.pipe_read_msg()
         self_serial.uart_send_msg(msg)
-        logger.info('Uart Send:{}'.format(msg))
+        # logger.info('Uart Send:{}'.format(msg))

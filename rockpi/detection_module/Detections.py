@@ -1,5 +1,4 @@
 import cv2
-from sympy import minimal_polynomial
 import pytesseract
 import numpy as np
 import math
@@ -7,7 +6,7 @@ from loguru import logger
 
 
 class Detections():
-    def __init__(self) -> None:
+    def __init__(self):
         self.flag_color = 0
         self.flag_A = 0
         self.flag_circle = 0
@@ -19,8 +18,6 @@ class Detections():
     # 模式17  数据包类型17  数据三位  长度0x03
     def find_color(self,image):
         #  定义高低阈值范围
-        center_x = 0
-        center_y = 0
         low = np.array([0,98,182])
         high = np.array([61,255,255])
         kernel = np.ones((5,5),np.uint8)
@@ -40,19 +37,18 @@ class Detections():
             point_1 = box[0]    # 左上
             point_2 = box[2]    # 右下
             centerpoint = ((point_1[0] + point_2[0])/20, (point_1[1] + point_2[1])/20)    
-            flag_color = 1
+            self.flag_color = 1
             center_x = int(centerpoint[0])
             center_y = int(centerpoint[1])
         except:
-            flag_color = 0
+            self.flag_color = 0
             center_x = 0
             center_y = 0
         cv2.imshow('camera', image)
         cv2.waitKey(1)
         if center_x != 0:
-            print("center_x"+str(center_x))
-            print("center_y"+str(center_y))
-        self.uart_send(flag_color,center_x,center_y,0,17)
+            logger.info('Find Coler:Point:({}, {})'.format(center_x, center_y))
+        return (self.flag_color, center_x, center_y)
     
     def Template(self,img):
         x,y,w,h = 0,0,0,0
