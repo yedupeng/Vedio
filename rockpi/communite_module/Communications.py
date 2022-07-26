@@ -18,7 +18,7 @@ class SelfSerial():
             mode = self.data_processing(data)
             if mode:
                 if lastmode != mode:
-                    logger.info('Run Model:{}'.format(mode))
+                    logger.info('Get Command. Run Model:{}'.format(mode))
                 return mode
             else:
                 return lastmode

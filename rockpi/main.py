@@ -2,6 +2,7 @@ import multiprocessing
 from SerialTask import main_serial
 from DetectionTask import main_detection
 
+
 def camera_f(pipeline):
     main_detection('/dev/ttyUSB0', pipeline)
 
