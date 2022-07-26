@@ -8,6 +8,6 @@ def main_serial(pipeline):
         data = pipe.recv()
         receive.uart_send(data)
         logger.info('send success   data:{}'.format(data))
-        
+
 
 
