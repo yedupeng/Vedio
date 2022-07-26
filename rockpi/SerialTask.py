@@ -1,13 +1,13 @@
-from communite_module.communicate import Receive
+from communite_module.Communications import SelfSerial
 from loguru import logger
 
-def main_serial(pipeline):
-    pipe = pipeline
-    receive = Receive('/dev/ttyUSB0')
+
+def main_serial(device, pipeline):
+    self_serial = SelfSerial(device, pipeline)
     while True:
-        data = pipe.recv()
-        receive.uart_send(data)
-        logger.info('send success   data:{}'.format(data))
+        msg = self_serial.pipe_read_msg()
+        self_serial.uart_send_msg(msg)
+        logger.info('Uart Send:{}'.format(msg))
 
 
 

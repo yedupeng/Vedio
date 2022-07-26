@@ -105,30 +105,7 @@ class Communite():
         elif index == 20:
             self.pipeline_send(self.pack_data_20(data1,data2,data3))
 
-    # 测试：定义功能包17
-    def pack_data_17(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x17, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
-    
-    def pack_data_18(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x18, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
 
-    def pack_data_19(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x19, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
-
-    def pack_data_20(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x20, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
 
     # 求和取余得发送包尾
     def sum_check(self, data_list):
