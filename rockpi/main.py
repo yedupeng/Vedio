@@ -3,10 +3,10 @@ from SerialTask import main_serial
 from DetectionTask import main_detection
 
 def camera_f(pipeline):
-    main_detection(pipeline)
+    pipeline.send([17, 1, 2, 3])
 
 def serial_f(pipeline):
-    main_serial(pipeline)
+    main_serial('/dev/ttyUSB0', pipeline)
 
 
 if __name__ == '__main__':
