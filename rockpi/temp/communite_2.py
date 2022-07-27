@@ -6,7 +6,7 @@ import math
 
 Width = 640*0.5
 Height = 480*0.5
-cap = cv2.VideoCapture(3)
+cap = cv2.VideoCapture(2)
 cap.set(3, Width)
 cap.set(4, Height)
 cap.set(10,150)
@@ -14,7 +14,6 @@ model = 0
 flag_color = 0
 flag_A = 0
 flag_circle = 0
-flag_line = 0
 last_model = 0
 
 # 定义串口3
@@ -281,6 +280,7 @@ class Communite():
 
     def recogniced_line(self,img):
         bias = 0
+        flag_line = 0
         Img = img.copy()
         rows = Img.shape[0]
         cols = Img.shape[1]
@@ -385,6 +385,7 @@ class Communite():
         直走    0
         """
         if the2 ==0:
+            flag_line = 1
             if the1!=0:
                 bias = 3
                 logger.info("左靠")
@@ -400,6 +401,7 @@ class Communite():
                     bias = 0
                     #logger.info("继续走")
         elif the1 != 0 and the2 !=0:
+            flag_line = 1
             if 70<the1<110:
                 logger.info("左转90")
                 bias = 1
@@ -408,6 +410,7 @@ class Communite():
             else:
                 bias = 3
         elif the2 != 0 and the3 != 0:
+            flag_line = 1
             if 70<the3<110:
                 logger.info("右转90")
                 bias = 2

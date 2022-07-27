@@ -1,22 +1,47 @@
-import multiprocessing
-from SerialTask import main_serial
-from DetectionTask import main_detection
+import loguru
+from communite_module.Communications import SelfSerial
+from detection_module.Detections import Detections
 
-def camera_f(pipeline):
-    main_detection(pipeline)
+from loguru import logger
+import cv2
 
-def serial_f(pipeline):
-    main_serial(pipeline)
+import argparse
+
+def make_args():
+    parser = argparse.ArgumentParser('Flying Args')
+    parser.add_argument('-point1', default='3rc', type=str, help='position color shape')
+    parser.add_argument('-point2', default='5br', type=str, help='position color shape')
+    return parser
 
 
 if __name__ == '__main__':
-    pipe_camera, pipe_serial = multiprocessing.Pipe()
+    args = make_args().parse_args()
+    logger.info('address:   {}'.format(args))
 
-    camera_p = multiprocessing.Process(target=camera_f, args=(pipe_camera, ))
-    serial_p = multiprocessing.Process(target=serial_f, args=(pipe_serial, ))
+    self_serial = SelfSerial('/dev/ttyUSB0')
+    detections = Detections()
 
-    camera_p.start()
-    serial_p.start()
+    cap = cv2.VideoCapture(0)
+    size = (640*0.5, 480*0.5)
+    cap.set(3, size[0])
+    cap.set(4, size[1])
+    cap.set(10,150)
 
-    camera_p.join()
-    serial_p.join()
+    mode = 0
+
+    while True:
+        ret,frame = cap.read()
+        if ret:
+
+            mode = self_serial.uart_read_mode(mode)
+
+            if mode == '11':#获取键盘输入
+                msg = detections.transmit_keyboard_msg()
+                if msg:
+                    self_serial.uart_send_msg(11, msg)
+            
+            elif mode == '12':
+                pass
+
+    cap.release()
+    cv2.destroyAllWindows()

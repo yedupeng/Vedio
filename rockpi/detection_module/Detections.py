@@ -1,157 +1,30 @@
-from loguru import logger
-import serial
-import numpy as np
 import cv2
+import pytesseract
+import numpy as np
 import math
+from loguru import logger
 
-Width = 640*0.5
-Height = 480*0.5
-cap = cv2.VideoCapture(1)
-cap.set(3, Width)
-cap.set(4, Height)
-cap.set(10,150)
-model = 0
-flag_color = 0
-flag_A = 0
-flag_circle = 0
-flag_line = 0
+from work_module.GetKeyboardInput import get_keyboard_input
 
-# 定义串口3
-Uart2 = serial.Serial(  port="/dev/ttyAMA1",
-                        bytesize=8,
-                        baudrate=115200,
-                        stopbits=1,
-                        timeout=1000)
 
-# 接收类
-class Communite():
-    def __init__(self) -> None:
-        self.model = 0
-        self.uart_buf = []
-        self.state = 0
-
+class Detections():
+    def __init__(self):
+        self.flag_color = 0
+        self.flag_A = 0
+        self.flag_circle = 0
+        self.flag_line = 0
+        
         self.pen_color = [[51,153,255],[255,0,255],[0,255,0]]
-        self.template = cv2.imread("E:\\Fly_nobody\\Node\\template\\3.jpg")
-        Methods = [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED, cv2.TM_CCORR, cv2.TM_CCORR_NORMED, cv2.TM_CCOEFF, cv2.TM_CCOEFF_NORMED]
-        self.method = Methods[5]
         self.location = [0, 0]
 
-
-    def uart_read(self):
-        if(Uart2.in_waiting>0):
-            data = Uart2.read().hex()
-            model = self.data_processing(data)
-            return model
-
-
-    # 数据处理
-    def data_processing(self, data) -> int:
-        if(self.state == 0):
-            if(data == "0f"):
-                self.state = 1
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 1):
-            if(data == "f0"):
-                self.state = 2
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 2):
-            if(data == "20"):
-                self.state = 3
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 3):
-            if(data == "02"):
-                self.state = 4
-                self.uart_buf.append(data)
-            else:
-                self.state = 0
-
-        elif(self.state == 4):
-            self.state = 5
-            self.uart_buf.append(data)
-
-        elif(self.state == 5):
-            sum = 0
-            for i in range(5):
-                sum = sum + int(self.uart_buf[i],16)
-            sum = sum % 256
-            # print(sum)
-            # print(int(data,16))
-            data_16 = int(data, 16)
-            if(data_16 == sum):
-                # self.uart_buf.append(data)
-                self.model = self.uart_buf[4]
-                self.uart_buf = []
-                self.state = 0
-                # logger.info("Connect success!")
-                return self.model
-                
-            else:
-                self.state = 0
-
-
-    """ 
-    发送串口数据
-    17:色块
-    18:字符
-    19:圆
-    20:巡线
-    """
-    def uart_send(self, data1, data2, data3, k, index):
-        if index == 17: 
-            Uart2.write(self.pack_data_17(data1,data2,data3))
-        elif index == 18:
-            Uart2.write(self.pack_data_18(data1,data2,data3))
-        elif index == 19:
-            Uart2.write(self.pack_data_18(data1,data2,data3))
-
-    # 测试：定义功能包17
-    def pack_data_17(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x17, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
-    
-    def pack_data_18(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x18, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
-
-    def pack_data_19(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x19, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
-
-    def pack_data_20(self, data1, data2, data3):
-        datalist = [0x0f, 0xf0, 0x20, 0x03, data1, data2, data3]
-        datalist.append(self.sum_check(datalist))
-        data = bytearray(datalist)
-        return data
-
-    # 求和取余得发送包尾
-    def sum_check(self, data_list):
-        data_sum = 0
-        for temp in data_list:
-            data_sum = temp+data_sum
-        return data_sum%256
-
-   # 模式17  数据包类型17  数据三位  长度0x03
+    # 模式17  数据包类型17  数据三位  长度0x03
     def find_color(self,image):
+        image = cv2.GaussianBlur(image, (7, 7), 0)  
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
         #  定义高低阈值范围
-        center_x = 0
-        center_y = 0
-        low = np.array([17,123,199])
-        high = np.array([179,255,255])
+        low = np.array([0,98,182])
+        high = np.array([61,255,255])
         kernel = np.ones((5,5),np.uint8)
         #  腐蚀 膨胀消除噪点
         mask = cv2.erode(image,kernel=kernel,iterations=2)
@@ -166,23 +39,21 @@ class Communite():
             rect = cv2.minAreaRect(are_max)
             box = cv2.boxPoints(rect)
             cv2.drawContours(image, [np.int0(box)], -1, (0, 255, 255), 2)
-            left_point_x = np.min(box[:, 0])
-            right_point_x = np.max(box[:, 0])
-            top_y = np.min(box[:,1])
-            bottom_y = np.max(box[:1])
-            flag_color = 1
-            center_x = (left_point_x+right_point_x)/2
-            center_y = (top_y+bottom_y)/2
+            point_1 = box[0]    # 左上
+            point_2 = box[2]    # 右下
+            centerpoint = ((point_1[0] + point_2[0])/20, (point_1[1] + point_2[1])/20)    
+            self.flag_color = 1
+            center_x = int(centerpoint[0])
+            center_y = int(centerpoint[1])
         except:
-            flag_color = 0
+            self.flag_color = 0
             center_x = 0
             center_y = 0
         cv2.imshow('camera', image)
         cv2.waitKey(1)
         if center_x != 0:
-            print(center_x)
-        self.uart_send(flag_color,center_x,center_y,0,17)
-            
+            logger.info('Find Coler:Point:({}, {})'.format(center_x, center_y))
+        return (self.flag_color, center_x, center_y)
     
     def Template(self,img):
         x,y,w,h = 0,0,0,0
@@ -279,21 +150,21 @@ class Communite():
         Img = img.copy()
         rows = Img.shape[0]
         cols = Img.shape[1]
-        part1 = Img[rows//3:rows,0:cols*2//5]
+        part1 = Img[rows//3:rows*2//3,0:cols*2//5]
         part2 = Img[rows//3:rows,cols*2//6:cols*4//6]
-        part3 = Img[rows//3:rows,cols*3//5:cols]
+        part3 = Img[rows//3:rows*2//3,cols*3//5:cols]
 
         blurred1 = cv2.GaussianBlur(part1, (7, 7), 0)
         edge1s = cv2.Canny(blurred1,170,255)
-        line1s = cv2.HoughLines(edge1s,1,np.pi/180,140)
+        line1s = cv2.HoughLines(edge1s,1,np.pi/180,100)
 
         blurred2 = cv2.GaussianBlur(part2, (7, 7), 0)
         edge2s = cv2.Canny(blurred2,170,255)
-        line2s = cv2.HoughLines(edge2s,1,np.pi/180,140)
+        line2s = cv2.HoughLines(edge2s,1,np.pi/180,100)
 
         blurred3 = cv2.GaussianBlur(part3, (7, 7), 0)
         edge3s = cv2.Canny(blurred3,170,255)
-        line3s = cv2.HoughLines(edge3s,1,np.pi/180,140)
+        line3s = cv2.HoughLines(edge3s,1,np.pi/180,100)
 
         the1 = 0
         the2 = 0
@@ -328,8 +199,28 @@ class Communite():
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
                 cv2.line(part2,(x1,y1),(x2,y2),(0,255,0),2)
-                the2 = math.degrees(theta2)
+                the2 = int(math.degrees(theta2))
+        except:
+            pass
 
+        theta = 0
+        cnts = cv2.findContours(edge2s, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+        try:
+            are_max = max(cnts, key=cv2.contourArea)
+            area = cv2.contourArea(are_max)
+            if area<60:
+                pass
+            else:
+                rect = cv2.minAreaRect(are_max)
+                box = cv2.boxPoints(rect)
+                cv2.drawContours(part2, [np.int0(box)], -1, (0, 255, 255), 2)
+
+                point_1 = box[0]    # 左上
+                point_2 = box[2]    # 右下
+                k1 = (point_1[1]-point_2[1])/(point_1[0]-point_2[0])
+                theta = math.atan(k1)
+                theta = math.degrees(theta)
+            #print(theta)
         except:
             pass
             
@@ -349,66 +240,62 @@ class Communite():
 
         except:
             pass
+        """
+        霍夫左右微调 5
+        色块右微调 6
+        色块左微调 7
+        左转90  1
+        右转90  2
+        左靠    3
+        右靠    4
+        直走    0
+        """
         if the2 ==0:
             if the1!=0:
-                print("右偏了，向左靠")
-                flag_line = 1
-                bias = 1
-            elif the3!=0:
-                print("左偏了，向右靠")
-                flag_line = 1
-                bias = 2
-        elif the1 != 0 and the2 !=0:
-            if 90<the1<130:
-                print("右转90")
-                flag_line = 1
                 bias = 3
-            elif 150<the1<180:
-                print("右微调")
-                flag_line = 1
-                bias = 5
-            else:
-                flag_line = 1
-                bias = 1
-                print("左靠")
-        elif the2 != 0 and the3 != 0:
-            if 90<the3<130:
-                print("左转90")
-                flag_line = 1
+                logger.info("左靠")
+            elif the3!=0:
                 bias = 4
-            elif 0<the3<35:
-                flag_line = 1
-                bias = 5
-                print("左微调")
+                logger.info("右靠")
             else:
-                flag_line = 1
+                if theta>-70 and theta<-10:
+                    bias = 6
+                elif theta<70 and theta>10:
+                    bias = 7
+                else:
+                    bias = 0
+                    #logger.info("继续走")
+        elif the1 != 0 and the2 !=0:
+            if 70<the1<110:
+                logger.info("左转90")
+                bias = 1
+            elif 150<the1<180:
+                bias = 5
+            else:
+                bias = 3
+        elif the2 != 0 and the3 != 0:
+            if 70<the3<110:
+                logger.info("右转90")
                 bias = 2
-                print("右靠")
-        self.uart_send(flag_line,bias,the2,0,20)
+            elif 0<the3<35:
+                bias = 5
+            else:
+                bias = 4
+        cv2.imshow("edg2",edge2s)
         cv2.imshow("img1",part1)
         cv2.imshow("img2",part2)
         cv2.imshow("img3",part3)
+        self.uart_send(self.flag_line,bias,the2,0,20)
 
-
-if __name__ == "__main__":
-    com = Communite()
-    while(1):
-        id,frame = cap.read()
-        while(model == "17"):
-            image = cv2.GaussianBlur(frame, (7, 7), 0)  
-            imgHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            com.find_color(imgHSV)
-            logger.info("success to model 17")
-        while(model == "18"):
-            logger.info("success to model 18")
-            com.recognice_text(frame)
-        while(model == "19"):
-            logger.info("success to model 19")
-            com.find_target(frame)
-        while(model == "20"):
-            logger.info("success to model 20")
-            com.recogniced_line(frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    cap.release()
-    cv2.destroyAllWindows()
+    def dian_sai(self, point1, point2):
+        # logger.info('ModeDianSai GetPoint:    {} {}'.format(point1, point2))
+        pass
+    
+    def transmit_keyboard_msg():
+        keyboard_input = get_keyboard_input()
+        points_split = []
+        for i in keyboard_input:
+            temp_h = i >> 8
+            points_split.append(temp_h)
+            points_split.append(i - (temp_h << 8))
+        return tuple(points_split)
