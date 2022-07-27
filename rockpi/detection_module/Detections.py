@@ -286,4 +286,5 @@ class Detections():
         self.uart_send(self.flag_line,bias,the2,0,20)
 
     def dian_sai(self, point1, point2):
-        logger.info('ModeDianSai GetPoint:    {} {}'.format(point1, point2))
+        # logger.info('ModeDianSai GetPoint:    {} {}'.format(point1, point2))
+        pass

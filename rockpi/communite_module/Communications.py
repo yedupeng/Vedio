@@ -28,21 +28,25 @@ class SelfSerial():
     def uart_send_msg(self, msg):
         #17:色块 18:字符 19:圆 20:巡线
         mode = msg[0]
-        if mode == 17: 
-            # 
-            self.uart.write(self.pack_data_17(msg[1], msg[2], msg[3]))
+        # if mode == 17: 
+        #     # 
+        #     self.uart.write(self.pack_data_17(msg[1], msg[2], msg[3]))
 
-        elif mode == 18:
-            #
-            self.uart.write(self.pack_data_18(msg[1], msg[2], msg[3]))
+        # elif mode == 18:
+        #     #
+        #     self.uart.write(self.pack_data_18(msg[1], msg[2], msg[3]))
 
-        elif mode == 19:
-            #
-            self.uart.write(self.pack_data_19(msg[1], msg[2], msg[3]))
+        # elif mode == 19:
+        #     #
+        #     self.uart.write(self.pack_data_19(msg[1], msg[2], msg[3]))
 
-        elif mode == 20:
-            #
-            self.uart.write(self.pack_data_20(msg[1], msg[2], msg[3]))
+        # elif mode == 20:
+        #     #
+        #     self.uart.write(self.pack_data_20(msg[1], msg[2], msg[3]))
+
+        if mode == 21:
+            self.uart.write(self.pack_data_20())
+        
 
 
     #串口读取数据处理函数
@@ -125,4 +129,6 @@ class SelfSerial():
         data = bytearray(datalist)
         return data
 
+    def pack_data_21(self, ):
+        pass
 

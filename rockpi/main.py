@@ -18,10 +18,10 @@ if __name__ == '__main__':
     args = make_args().parse_args()
     logger.info('address:   {}'.format(args))
 
-    self_serial = SelfSerial('COM4')
+    self_serial = SelfSerial('/dev/ttyUSB0')
     detections = Detections()
 
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(0)
     size = (640*0.5, 480*0.5)
     cap.set(3, size[0])
     cap.set(4, size[1])
@@ -49,7 +49,8 @@ if __name__ == '__main__':
             #     detections.recogniced_line(frame)
             if mode == '21':
                 msg = detections.dian_sai(args.point1, args.point2)
-
+                if msg:
+                    self_serial.uart_send_msg((21, ) + (msg))
             
 
             
