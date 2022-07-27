@@ -32,27 +32,16 @@ if __name__ == '__main__':
     while True:
         ret,frame = cap.read()
         if ret:
+
             mode = self_serial.uart_read_mode(mode)
 
-            # if mode == "17":
-            #     msg = detections.find_color(frame)
-            #     if msg:
-            #         self_serial.uart_send_msg((17, ) + (msg))
-
-            # elif mode == "18":
-            #     detections.recognice_text(frame)
-
-            # elif mode == "19":
-            #     detections.find_target(frame)
-
-            # elif mode == "20":
-            #     detections.recogniced_line(frame)
-            if mode == '21':
-                msg = detections.dian_sai(args.point1, args.point2)
+            if mode == '11':#获取键盘输入
+                msg = detections.transmit_keyboard_msg()
                 if msg:
-                    self_serial.uart_send_msg((21, ) + (msg))
+                    self_serial.uart_send_msg(11, msg)
             
+            elif mode == '12':
+                pass
 
-            
     cap.release()
     cv2.destroyAllWindows()

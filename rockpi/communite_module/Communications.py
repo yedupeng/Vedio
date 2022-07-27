@@ -25,28 +25,9 @@ class SelfSerial():
             return lastmode
 
     #多进程 串口线程接口 往串口发送数据
-    def uart_send_msg(self, msg):
-        #17:色块 18:字符 19:圆 20:巡线
-        mode = msg[0]
-        # if mode == 17: 
-        #     # 
-        #     self.uart.write(self.pack_data_17(msg[1], msg[2], msg[3]))
-
-        # elif mode == 18:
-        #     #
-        #     self.uart.write(self.pack_data_18(msg[1], msg[2], msg[3]))
-
-        # elif mode == 19:
-        #     #
-        #     self.uart.write(self.pack_data_19(msg[1], msg[2], msg[3]))
-
-        # elif mode == 20:
-        #     #
-        #     self.uart.write(self.pack_data_20(msg[1], msg[2], msg[3]))
-
-        if mode == 21:
-            self.uart.write(self.pack_data_20())
-        
+    def uart_send_msg(self, mode, msg):
+        if mode == 11:
+            self.uart.write(self.packdata_transmit_keyboard_msg(msg))
 
 
     #串口读取数据处理函数
@@ -104,6 +85,14 @@ class SelfSerial():
             data_sum = temp+data_sum
         return data_sum % 256
 
+    def packdata_transmit_keyboard_msg(self, msg):
+        data_list = [0x0f, 0xf0, 0x20, 0x03]
+        data_list.extend(msg)
+        data_list.append(self.sum_check(data_list))
+        data = bytearray(data_list)
+        return data
+
+'''
     #定义发送数据包 返回list
     def pack_data_17(self, data1, data2, data3):
         datalist = [0x0f, 0xf0, 0x17, 0x03, data1, data2, data3]
@@ -128,7 +117,5 @@ class SelfSerial():
         datalist.append(self.sum_check(datalist))
         data = bytearray(datalist)
         return data
-
-    def pack_data_21(self, ):
-        pass
+'''
 
