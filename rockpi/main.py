@@ -17,7 +17,7 @@ def make_args():
 if __name__ == '__main__':
     args = make_args().parse_args()
     logger.info('address:   {}'.format(args))
-    
+
     self_serial = SelfSerial('COM4')
     detections = Detections()
 
@@ -34,19 +34,23 @@ if __name__ == '__main__':
         if ret:
             mode = self_serial.uart_read_mode(mode)
 
-            if mode == "17":
-                msg = detections.find_color(frame)
-                if msg:
-                    self_serial.uart_send_msg((17, ) + (msg))
+            # if mode == "17":
+            #     msg = detections.find_color(frame)
+            #     if msg:
+            #         self_serial.uart_send_msg((17, ) + (msg))
 
-            if mode == "18":
-                detections.recognice_text(frame)
+            # elif mode == "18":
+            #     detections.recognice_text(frame)
 
-            if mode == "19":
-                detections.find_target(frame)
+            # elif mode == "19":
+            #     detections.find_target(frame)
 
-            if mode == "20":
-                detections.recogniced_line(frame)
+            # elif mode == "20":
+            #     detections.recogniced_line(frame)
+            if mode == '21':
+                msg = detections.dian_sai(args.point1, args.point2)
+
+            
 
             
     cap.release()
