@@ -1,12 +1,24 @@
+import loguru
 from communite_module.Communications import SelfSerial
 from detection_module.Detections import Detections
 
 from loguru import logger
 import cv2
 
+import argparse
+
+def make_args():
+    parser = argparse.ArgumentParser('Flying Args')
+    parser.add_argument('-point1', default='3rc', type=str, help='position color shape')
+    parser.add_argument('-point2', default='5br', type=str, help='position color shape')
+    return parser
+
 
 if __name__ == '__main__':
-    self_serial = SelfSerial('/dev/ttyUSB0')
+    args = make_args().parse_args()
+    logger.info('address:   {}'.format(args))
+    
+    self_serial = SelfSerial('COM4')
     detections = Detections()
 
     cap = cv2.VideoCapture(2)
@@ -35,5 +47,7 @@ if __name__ == '__main__':
 
             if mode == "20":
                 detections.recogniced_line(frame)
+
+            
     cap.release()
     cv2.destroyAllWindows()
