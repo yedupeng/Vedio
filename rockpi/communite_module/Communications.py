@@ -26,8 +26,11 @@ class SelfSerial():
 
     #多进程 串口线程接口 往串口发送数据
     def uart_send_msg(self, mode, msg):
-        if mode == 11:
-            self.uart.write(self.packdata_transmit_keyboard_msg(msg))
+        data_list = [0x0f, 0xf0, mode, len(msg)]
+        data_list.extend(msg)
+        data_list.append(self.sum_check(data_list))
+        data = bytearray(data_list)
+        self.uart.write(data)
 
 
     #串口读取数据处理函数
@@ -71,10 +74,10 @@ class SelfSerial():
             sum = sum % 256
             data_16 = int(data, 16)
             if(data_16 == sum):
-                self.model = self.uart_buf[4]
+                mode = self.uart_buf[4]
                 self.uart_buf = []
                 self.state = 0
-                return self.model
+                return int(mode, 16)
             else:
                 self.state = 0
 
@@ -85,12 +88,6 @@ class SelfSerial():
             data_sum = temp+data_sum
         return data_sum % 256
 
-    def packdata_transmit_keyboard_msg(self, msg):
-        data_list = [0x0f, 0xf0, 0x20, 0x03]
-        data_list.extend(msg)
-        data_list.append(self.sum_check(data_list))
-        data = bytearray(data_list)
-        return data
 
 '''
     #定义发送数据包 返回list

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     args = make_args().parse_args()
     logger.info('address:   {}'.format(args))
 
-    self_serial = SelfSerial('/dev/ttyUSB0')
+    self_serial = SelfSerial('COM4')
     detections = Detections()
 
     cap = cv2.VideoCapture(0)
@@ -35,13 +35,11 @@ if __name__ == '__main__':
 
             mode = self_serial.uart_read_mode(mode)
 
-            if mode == '11':#获取键盘输入
+            if mode == 1:#获取键盘输入
                 msg = detections.transmit_keyboard_msg()
                 if msg:
-                    self_serial.uart_send_msg(11, msg)
+                    self_serial.uart_send_msg(1, msg)
             
-            elif mode == '12':
-                pass
 
     cap.release()
     cv2.destroyAllWindows()
