@@ -4,7 +4,8 @@ import numpy as np
 import math
 from loguru import logger
 
-from work_module.GetKeyboardInput import get_keyboard_input
+from utils.GetKeyboardInput import get_keyboard_input
+from utils.SplitInt import get_gigh_low_data
 
 
 class Detections():
@@ -16,6 +17,59 @@ class Detections():
         
         self.pen_color = [[51,153,255],[255,0,255],[0,255,0]]
         self.location = [0, 0]
+
+    #mode 1 键盘输入
+    def transmit_keyboard_msg(self):
+        keyboard_input = get_keyboard_input()
+        points_split = []
+        for data in keyboard_input:
+            points_split.extend(get_gigh_low_data(data))
+        return tuple(points_split)
+
+    #mode 10 飞到目标上空，定位最近目标，返回中心坐标
+    def find_all(self,img):
+        centerpoint = (0,0)
+        blur = cv2.GaussianBlur(img, (7, 7), 0)
+        length = 0
+        index = 0
+        flag = 0
+        len_list = []
+        area_list = []
+        edge = cv2.Canny(blur,170,255)
+        cnts = cv2.findContours(edge, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[-2]
+        try:
+            for i in cnts:
+                area = cv2.contourArea(i)
+                if area<140:
+                    pass
+                else:
+                    flag = 1
+                    perimeter = cv2.arcLength(i,True)
+                    approx = cv2.approxPolyDP(i,0.02*perimeter,True)                                             # 角的数量
+                    rect = cv2.minAreaRect(i)
+                    box = cv2.boxPoints(rect)
+                    cv2.drawContours(img, [np.int0(box)], -1, (0, 255, 255), 2)
+                    point_1 = box[0]    # 左上
+                    point_2 = box[2]    # 右下
+                    centerpoint = ((point_1[0] + point_2[0])/2, (point_1[1] + point_2[1])/2)
+                    length = math.sqrt((centerpoint[0]-320)**2+(centerpoint[1]-240)**2)
+                    area_list.append((centerpoint[0],centerpoint[1]))
+                    len_list.append(length)
+            index = len_list.index(max(len_list))
+        except Exception as e:
+            print(e)
+            flag = 0
+        cv2.imshow('camera', img)
+        cv2.waitKey(1)
+        if flag == 1:
+            logger.info((flag,(int(area_list[index][0])),(int(area_list[index][1]))))
+            return (flag, ) + get_gigh_low_data(int(area_list[index][0])) + get_gigh_low_data(int(area_list[index][1]))
+            # return (flag,(int(area_list[index][0])),(int(area_list[index][1])))
+        else:
+            logger.info((flag, 0, 0, 0, 0))
+            return (flag, 0,0, 0, 0)
+
+    
 
     # 模式17  数据包类型17  数据三位  长度0x03
     def find_color(self,image):
@@ -287,11 +341,3 @@ class Detections():
         cv2.imshow("img3",part3)
         self.uart_send(self.flag_line,bias,the2,0,20)
 
-    def transmit_keyboard_msg(self):
-        keyboard_input = get_keyboard_input()
-        points_split = []
-        for i in keyboard_input:
-            temp_h = i >> 8
-            points_split.append(temp_h)
-            points_split.append(i - (temp_h << 8))
-        return tuple(points_split)
