@@ -43,11 +43,15 @@ if __name__ == '__main__':
                 msg = detections.transmit_keyboard_msg()
                 if msg:
                     self_serial.uart_send_msg(1, msg)
+                mode = 50
 
             elif mode == 10:
                 msg = detections.find_all(frame)
                 if msg:
                     self_serial.uart_send_msg(10, msg)
+
+            elif mode == 50:
+                pass
             
 
     cap.release()
