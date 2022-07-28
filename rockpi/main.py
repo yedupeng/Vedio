@@ -36,7 +36,11 @@ if __name__ == '__main__':
 
             mode = self_serial.uart_read_mode(mode)
 
-            if mode == 1:
+            #发送上线消息
+            if mode == 0:
+                self_serial.uart_send_msg(0, (1, ))
+
+            elif mode == 1:
                 msg = detections.transmit_keyboard_msg()
                 if msg:
                     self_serial.uart_send_msg(1, msg)
