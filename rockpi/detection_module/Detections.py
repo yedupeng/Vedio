@@ -287,11 +287,7 @@ class Detections():
         cv2.imshow("img3",part3)
         self.uart_send(self.flag_line,bias,the2,0,20)
 
-    def dian_sai(self, point1, point2):
-        # logger.info('ModeDianSai GetPoint:    {} {}'.format(point1, point2))
-        pass
-    
-    def transmit_keyboard_msg():
+    def transmit_keyboard_msg(self):
         keyboard_input = get_keyboard_input()
         points_split = []
         for i in keyboard_input:

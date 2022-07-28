@@ -21,21 +21,22 @@ if __name__ == '__main__':
     self_serial = SelfSerial('COM4')
     detections = Detections()
 
-    cap = cv2.VideoCapture(0)
-    size = (640*0.5, 480*0.5)
-    cap.set(3, size[0])
-    cap.set(4, size[1])
-    cap.set(10,150)
+    # cap = cv2.VideoCapture(0)
+    # size = (640*0.5, 480*0.5)
+    # cap.set(3, size[0])
+    # cap.set(4, size[1])
+    # cap.set(10,150)
 
     mode = 0
 
     while True:
-        ret,frame = cap.read()
+        # ret,frame = cap.read()
+        ret = 1
         if ret:
 
             mode = self_serial.uart_read_mode(mode)
 
-            if mode == 1:#获取键盘输入
+            if mode == 1:
                 msg = detections.transmit_keyboard_msg()
                 if msg:
                     self_serial.uart_send_msg(1, msg)
