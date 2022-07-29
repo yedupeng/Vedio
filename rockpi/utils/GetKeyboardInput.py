@@ -1,6 +1,5 @@
 from loguru import logger
 from utils.SplitInt import get_gigh_low_data
-import serial
 
 
 def get_keyboard_input():
@@ -14,9 +13,4 @@ def transmit_keyboard_msg():
     points_split = []
     for data in keyboard_input:
         points_split.extend(get_gigh_low_data(data))
-        
     return tuple(points_split)
-
-
-if __name__ == '__main__':
-    msg = transmit_keyboard_msg()
