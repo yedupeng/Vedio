@@ -41,6 +41,18 @@ if __name__ == '__main__':
                 if msg:
                     self_serial.uart_send_msg(10, msg)
 
+            #摄像头识别
+            elif mode == 11:
+                pass
+
+            #模式2
+            elif mode == 12:
+                pass
+
+            #降落 return 5 flag x_h x_l y_h y_l
+            elif mode == 20:
+                pass
+
             elif mode == 50:
                 pass
             
