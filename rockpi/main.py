@@ -1,4 +1,3 @@
-import loguru
 from communite_module.Communications import SelfSerial
 from detection_module.Detections import Detections
 
@@ -7,8 +6,6 @@ import cv2
 
 
 if __name__ == '__main__':
-    logger.info('System Started')
-
     self_serial = SelfSerial('/dev/ttyUSB0')
     detections = Detections()
 
@@ -21,8 +18,6 @@ if __name__ == '__main__':
     mode = 0
 
     logger.info('System Starting')
-
-
     while True:
         ret,frame = cap.read()
         if ret:
