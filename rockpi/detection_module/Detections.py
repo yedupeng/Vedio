@@ -32,8 +32,8 @@ class Detections():
         image = cv2.GaussianBlur(img, (7, 7), 0)  
         imgHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        low = np.array([0,146,51])
-        high = np.array([116,255,255])
+        low = np.array([0,109,80])
+        high = np.array([179,255,255])
         mask = cv2.inRange(imgHSV,low,high)
         length = 0
         index = 0
