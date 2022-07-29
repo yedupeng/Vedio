@@ -7,18 +7,19 @@ import cv2
 
 
 if __name__ == '__main__':
-    logger.info('System Started')
-
-    self_serial = SelfSerial('COM4')
+    self_serial = SelfSerial('COM11')
     detections = Detections()
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     size = (640*0.5, 480*0.5)
     cap.set(3, size[0])
     cap.set(4, size[1])
     cap.set(10,150)
 
     mode = 0
+
+    logger.info('System Starting')
+
 
     while True:
         ret,frame = cap.read()
@@ -45,13 +46,23 @@ if __name__ == '__main__':
             elif mode == 11:
                 pass
 
-            #模式2
+            #模式2 右飞
             elif mode == 12:
-                pass
+                msg = detections.find_color_forward(frame)
+                if msg:
+                    self_serial.uart_send_msg(10, msg)
+            
+            #模式二 前飞
+            elif mode == 13:
+                msg = detections.find_color_forward(frame)
+                if msg:
+                    self_serial.uart_send_msg(10, msg)
 
             #降落 return 5 flag x_h x_l y_h y_l
-            elif mode == 20:
-                pass
+            elif mode  == 20:
+                msg = detections.Template(frame)
+                if msg:
+                    self_serial.uart_send_msg(20, msg)
 
             elif mode == 50:
                 pass

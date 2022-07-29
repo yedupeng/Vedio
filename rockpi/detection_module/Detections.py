@@ -10,13 +10,20 @@ from utils.SplitInt import get_gigh_low_data
 
 class Detections():
     def __init__(self):
-        self.flag_color = 0
-        self.flag_A = 0
-        self.flag_circle = 0
-        self.flag_line = 0
-        
         self.pen_color = [[51,153,255],[255,0,255],[0,255,0]]
+        self.blue = []
+        self.red = []
+        self.template = cv2.imread("samples\YuanDian.png")
+        Methods = [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED, cv2.TM_CCORR, cv2.TM_CCORR_NORMED, cv2.TM_CCOEFF, cv2.TM_CCOEFF_NORMED]
+        self.method = Methods[5]
         self.location = [0, 0]
+        self.color = 0
+        self.coner = 0
+
+    #model 12以及13中调用的计算cos函数
+    def angle_cos(self,p0, p1, p2):
+        d1, d2 = (p0-p1).astype('float'), (p2-p1).astype('float')
+        return abs( np.dot(d1, d2) / np.sqrt( np.dot(d1, d1)*np.dot(d2, d2) ) )
 
     #mode 1 键盘输入
     def transmit_keyboard_msg(self):
@@ -62,10 +69,11 @@ class Detections():
         except Exception as e:
             flag = 0
         cv2.imshow('camera', img)
-        cv2.waitKey(1)
+        cv2.waitKey(50)
         if flag:
-            logger.info('mode 10:   {}, {}'.format(flag, area_list[index]))
-            return ((flag, ) + get_gigh_low_data(int(area_list[index][0])) + get_gigh_low_data(int(area_list[index][1])))
+            target = area_list[index]
+            logger.info('mode 10:   {}, {}'.format(flag, target))
+            return (flag, ) + get_gigh_low_data(int(target[0])) + get_gigh_low_data(int(target[1]))
         else:
             return (flag, 0, 0, 0, 0)
 
@@ -82,7 +90,7 @@ class Detections():
 
 
         # 对模板图像进行处理
-        tem = cv2.cvtColor(self.template,cv2.COLOR_RGB2GRAY)
+        tem = cv2.cvtColor(self.template, cv2.COLOR_RGB2GRAY)
         erode = cv2.erode(tem, None, iterations=1)
         dia = cv2.dilate(erode, None, iterations=1)
         thresh_1 = cv2.threshold(dia,30,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
@@ -111,10 +119,95 @@ class Detections():
             flag = 0
         cv2.imshow("img",can)
         cv2.imshow("img2",img)
-        cv2.waitKey(1)
+        cv2.waitKey(50)
         if flag != 0:
-            logger.info(flag,int(centerpoint[0]),int(centerpoint[1]))
-            return (flag, get_gigh_low_data(int(centerpoint[0])), get_gigh_low_data(int(centerpoint[1])))
+            centerpoint_int = [int(centerpoint[0]), int(centerpoint[1])]
+            logger.info('mode 20:   {}, {}'.format(flag, centerpoint_int))
+            return (flag, ) + get_gigh_low_data(centerpoint_int[0]) + get_gigh_low_data(centerpoint_int[1])
         else:
-            print(flag,0,0)
-            return (flag,0,0)
+            return (flag, 0, 0, 0, 0)
+
+    #model 12、13  前飞识别特征色块  右飞识别特征色块
+    def find_color_forward(self,image):
+        #  定义高低阈值范围
+        centerpoint = (0,0)
+        number = 0
+        flag = 0
+        self.color = 0
+        self.coner = 3
+        if self.color == 0:
+            low = np.array([0,171,131])
+            high = np.array([179,255,255])
+        elif self.color == 1:
+            low = np.array([90,101,39])
+            high = np.array([179,255,255])
+        #  得到感兴趣区
+        mask = cv2.inRange(image,low,high)
+        can = cv2.Canny(mask,50,150)
+        list = []
+        #  找到边界
+        cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+        try:
+            for i in cnts:
+                area = cv2.contourArea(i)
+                if area < 40:
+                    pass
+                else:
+                    perimeter = cv2.arcLength(i,True)
+                    approx = cv2.approxPolyDP(i,0.02*perimeter,True)
+                    x, y, w, h = cv2.boundingRect(approx) 
+                    CornerNum = len(approx)                                                      # 角的数量
+                    rect = cv2.minAreaRect(i)
+                    box = cv2.boxPoints(rect)
+                    x, y, w, h = cv2.boundingRect(approx)
+                    if CornerNum <5:
+                        if CornerNum == self.coner:
+                            if len(approx) == 4 and cv2.isContourConvex(approx):
+                                approx = approx.reshape(-1, 2)
+                                max_cos = np.max([self.angle_cos( approx[i], approx[(i+1) % 4], approx[(i+2) % 4] ) for i in range(4)])
+                                # 只检测矩形（cos90° = 0）
+                                if max_cos > 0.5:
+                                    break
+                                # 检测四边形（不限定角度范围）
+                            cv2.drawContours(image, [np.int0(box)], -1, (0, 255, 255), 2)
+                            perimeter = cv2.arcLength(i,True)
+                            point_1 = box[0]    # 左上
+                            point_2 = box[2]    # 右下
+                            
+                            centerpoint = ((point_1[0] + point_2[0])/2, (point_1[1] + point_2[1])/2)
+                            list.append((centerpoint[0],centerpoint[1]))
+                        else:
+                            print("未识别到")
+                    elif self.coner==5 and CornerNum>5:
+                        S1=cv2.contourArea(i)
+                        ell=cv2.fitEllipse(i)
+                        rect = cv2.minAreaRect(i)
+                        box = cv2.boxPoints(rect)
+                        S2 = math.pi*ell[1][0]*ell[1][1]
+                        if (S1/S2)>0.2 :#面积比例，可以更改，根据数据集。。。
+                            image = cv2.ellipse(image, ell, (0, 255, 0), 2)
+                            point_1 = box[0]    # 左上
+                            point_2 = box[2]    # 右下
+                            centerpoint = ((point_1[0] + point_2[0])/2, (point_1[1] + point_2[1])/2)
+                            list.append((centerpoint[0],centerpoint[1]))
+
+        except Exception as e:
+            pass
+        
+        cv2.imshow('camera', image)
+        cv2.imshow('mask', mask)
+        cv2.imshow('can', can)
+        cv2.waitKey(1)
+
+        if list is not None:
+            if len(list) == 1:
+                flag = 1
+                number = 1
+                return (flag, ) + number +get_gigh_low_data(int(list[0][0])) + get_gigh_low_data(int(list[0][1]))
+            elif len(list) == 2:
+                flag = 1
+                number = 2
+                if list[0][0]<list[1][0]:
+                    return (flag, ) + number + get_gigh_low_data(int(list[0][0])) + get_gigh_low_data(int(list[0][1]) + get_gigh_low_data(int(list[1][0])) + get_gigh_low_data(int(list[1][1])))
+                else:
+                    return (flag, ) + number + get_gigh_low_data(int(list[1][0])) + get_gigh_low_data(int(list[1][1]) + get_gigh_low_data(int(list[0][0])) + get_gigh_low_data(int(list[0][1])))
