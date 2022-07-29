@@ -9,7 +9,7 @@ import cv2
 if __name__ == '__main__':
     logger.info('System Started')
 
-    self_serial = SelfSerial('COM4')
+    self_serial = SelfSerial('/dev/ttyUSB0')
     detections = Detections()
 
     cap = cv2.VideoCapture(0)
@@ -23,7 +23,6 @@ if __name__ == '__main__':
     while True:
         ret,frame = cap.read()
         if ret:
-
             mode = self_serial.uart_read_mode(mode)
 
             #发送上线消息
