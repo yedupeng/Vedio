@@ -14,3 +14,6 @@ def transmit_keyboard_msg():
     for data in keyboard_input:
         points_split.extend(get_gigh_low_data(data))
     return tuple(points_split)
+
+def listen_keyboard():
+    pass
