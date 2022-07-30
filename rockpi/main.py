@@ -9,7 +9,7 @@ if __name__ == '__main__':
     self_serial = SelfSerial('/dev/ttyUSB0')
     detections = Detections()
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     size = (640*0.5, 480*0.5)
     cap.set(3, size[0])
     cap.set(4, size[1])

@@ -57,7 +57,7 @@ class SelfSerial():
                 self.state = 0
 
         elif(self.state == 3):
-            if(data == "02"):
+            if(data == "01"):
                 self.state = 4
                 self.uart_buf.append(data)
             else:
