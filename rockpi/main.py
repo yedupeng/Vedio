@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
             #摄像头识别
             elif mode == 11:
-                pass
+                detections
 
             #模式2 右飞
             elif mode == 12:

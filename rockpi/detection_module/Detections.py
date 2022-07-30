@@ -39,7 +39,7 @@ class Detections():
         image = cv2.GaussianBlur(img, (7, 7), 0)  
         imgHSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        low = np.array([0,109,80])
+        low = np.array([0,119,105])
         high = np.array([179,255,255])
         mask = cv2.inRange(imgHSV,low,high)
         length = 0
@@ -68,12 +68,12 @@ class Detections():
             index = len_list.index(min(len_list))
         except Exception as e:
             flag = 0
-        cv2.imshow('camera', img)
-        cv2.waitKey(50)
+        # cv2.imshow('camera', img)
+        # cv2.waitKey(50)
         if flag:
-            target = area_list[index]
+            target = [int(area_list[index][0]), int(area_list[index][1])]
             logger.info('mode 10:   {}, {}'.format(flag, target))
-            return (flag, ) + get_gigh_low_data(int(target[0])) + get_gigh_low_data(int(target[1]))
+            return (flag, ) + get_gigh_low_data(target[0]) + get_gigh_low_data(target[1])
         else:
             return (flag, 0, 0, 0, 0)
 
@@ -117,9 +117,9 @@ class Detections():
                 centerpoint = ((point_1[0] + point_2[0])/2, (point_1[1] + point_2[1])/2)
         except:
             flag = 0
-        cv2.imshow("img",can)
-        cv2.imshow("img2",img)
-        cv2.waitKey(50)
+        # cv2.imshow("img",can)
+        # cv2.imshow("img2",img)
+        # cv2.waitKey(50)
         if flag != 0:
             centerpoint_int = [int(centerpoint[0]), int(centerpoint[1])]
             logger.info('mode 20:   {}, {}'.format(flag, centerpoint_int))
