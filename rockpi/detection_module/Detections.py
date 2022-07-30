@@ -176,12 +176,13 @@ class Detections():
         # cv2.imshow("img",can)
         # cv2.imshow("img2",img)
         # cv2.waitKey(50)
-        if flag != 0:
+        if flag:
             centerpoint_int = [int(centerpoint[0]), int(centerpoint[1])]
-            logger.info('mode 20:   {}, {}'.format(flag, centerpoint_int))
-            return (flag, ) + get_gigh_low_data(centerpoint_int[0]) + get_gigh_low_data(centerpoint_int[1])
+            if centerpoint[0] != 0:
+                logger.info('mode 20:   {}, {}'.format(flag, centerpoint_int))
+                return (flag, ) + get_gigh_low_data(centerpoint_int[0]) + get_gigh_low_data(centerpoint_int[1])
         else:
-            return (flag, 0, 0, 0, 0)
+            return 
 
     #model 12、13  前飞识别特征色块  右飞识别特征色块
     def find_color_forward(self,image):
