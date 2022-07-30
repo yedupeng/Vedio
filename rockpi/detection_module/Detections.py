@@ -13,7 +13,7 @@ class Detections():
         self.pen_color = [[51,153,255],[255,0,255],[0,255,0]]
         self.blue = []
         self.red = []
-        self.template = cv2.imread("samples\YuanDian.png")
+        self.template = cv2.imread('/home/rock/code/Vedio/rockpi/samples/YuanDian.png')
         Methods = [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED, cv2.TM_CCORR, cv2.TM_CCORR_NORMED, cv2.TM_CCOEFF, cv2.TM_CCOEFF_NORMED]
         self.method = Methods[5]
         self.location = [0, 0]

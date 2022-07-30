@@ -1,4 +1,3 @@
-import loguru
 from communite_module.Communications import SelfSerial
 from detection_module.Detections import Detections
 
@@ -7,7 +6,7 @@ import cv2
 
 
 if __name__ == '__main__':
-    self_serial = SelfSerial('COM11')
+    self_serial = SelfSerial('/dev/ttyUSB0')
     detections = Detections()
 
     cap = cv2.VideoCapture(1)
@@ -19,12 +18,9 @@ if __name__ == '__main__':
     mode = 0
 
     logger.info('System Starting')
-
-
     while True:
         ret,frame = cap.read()
         if ret:
-
             mode = self_serial.uart_read_mode(mode)
 
             #发送上线消息
