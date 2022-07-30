@@ -17,9 +17,19 @@ if __name__ == '__main__':
 
     mode = 0
 
+
+    cap2 = cv2.VideoCapture(0)
+    cap2.set(3, size[0])
+    cap2.set(4, size[1])
+    cap2.set(10,150)
+
     logger.info('System Starting')
     while True:
-        ret,frame = cap.read()
+        if mode != 12:
+            ret,frame = cap.read()
+        elif mode == 12:
+            ret,frame = cap2.read()
+
         if ret:
             mode = self_serial.uart_read_mode(mode)
 
@@ -40,19 +50,21 @@ if __name__ == '__main__':
 
             #摄像头识别
             elif mode == 11:
-                detections
+                msg = detections.get_color()
+                if msg:
+                    self_serial.uart_send_msg(11, (msg, ))
 
             #模式2 右飞
             elif mode == 12:
                 msg = detections.find_color_forward(frame)
                 if msg:
-                    self_serial.uart_send_msg(10, msg)
+                    self_serial.uart_send_msg(12, msg)
             
             #模式二 前飞
             elif mode == 13:
                 msg = detections.find_color_forward(frame)
                 if msg:
-                    self_serial.uart_send_msg(10, msg)
+                    self_serial.uart_send_msg(13, msg)
 
             #降落 return 5 flag x_h x_l y_h y_l
             elif mode  == 20:

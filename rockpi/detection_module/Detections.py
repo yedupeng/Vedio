@@ -20,6 +20,62 @@ class Detections():
         self.color = 0
         self.coner = 0
 
+    def get_color(self,image):
+        center = 0
+        flag = 0
+        kernel = np.ones((5,5),np.uint8)
+        for flag in range(0,2):
+            Img = image.copy()
+            if flag == 0:
+                low = np.array([0,137,138])
+                high = np.array([179,255,255])
+            elif flag == 1:
+                low = np.array([90,101,39])
+                high = np.array([179,255,255])
+                #  腐蚀 膨胀消除噪点
+            mask = cv2.erode(Img,kernel=kernel,iterations=2)
+            mask = cv2.dilate(mask,kernel=kernel,iterations=2)
+            #  得到感兴趣区
+            mask = cv2.inRange(mask,low,high)
+            #  找到边界
+            cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[-2]
+            try:
+                #  得到色块区域并画出轮廓
+                are_max = max(cnts, key=cv2.contourArea)
+                area = cv2.contourArea(are_max)
+                perimeter = cv2.arcLength(are_max,True)
+                approx = cv2.approxPolyDP(are_max,0.02*perimeter,True)
+                CornerNum = len(approx)                                                      # 角的数量
+                rect = cv2.minAreaRect(are_max)
+                box = cv2.boxPoints(rect)
+                x, y, w, h = cv2.boundingRect(approx)
+                if CornerNum ==3: 
+                    print("triangle")
+                    self.coner = CornerNum
+                    self.color = flag
+                elif CornerNum == 4:
+                    self.coner = CornerNum
+                    self.color = flag
+                    print("Square")
+                elif CornerNum > 4:
+                    CornerNum == 5
+                    print("Circle")
+                    self.coner = CornerNum
+                    self.color = flag
+                else:
+                    print("未识别到")
+                    return 0
+                cv2.drawContours(image, [np.int0(box)], -1, (0, 255, 255), 2)
+            except:
+                pass
+                return 0
+            print(str(self.coner)+str(self.color))
+            return 1
+        # cv2.imshow('camera', image)
+        # cv2.imshow('mask',mask)
+        # cv2.waitKey(1)
+
+
     #model 12以及13中调用的计算cos函数
     def angle_cos(self,p0, p1, p2):
         d1, d2 = (p0-p1).astype('float'), (p2-p1).astype('float')
@@ -194,10 +250,10 @@ class Detections():
         except Exception as e:
             pass
         
-        cv2.imshow('camera', image)
-        cv2.imshow('mask', mask)
-        cv2.imshow('can', can)
-        cv2.waitKey(1)
+        # cv2.imshow('camera', image)
+        # cv2.imshow('mask', mask)
+        # cv2.imshow('can', can)
+        # cv2.waitKey(1)
 
         if list is not None:
             if len(list) == 1:
